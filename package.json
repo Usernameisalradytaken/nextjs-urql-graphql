@@ -6,17 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.6.1",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
     "@types/node": "20.1.0",
     "@types/react": "18.2.6",
     "@types/react-dom": "18.2.4",
+    "@urql/exchange-graphcache": "^6.0.4",
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.1",
+    "formik": "^2.2.9",
+    "framer-motion": "^10.12.8",
     "next": "13.4.1",
+    "next-urql": "^5.0.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "typescript": "5.0.4"
+    "react-is": "^18.2.0",
+    "urql": "^4.0.2"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "3.3.1",
+    "@graphql-codegen/client-preset": "3.0.1",
+    "@graphql-codegen/typescript": "^3.0.4",
+    "@graphql-codegen/typescript-operations": "^3.0.4",
+    "@graphql-codegen/typescript-urql": "^3.7.3",
+    "graphql": "^16.6.0",
+    "typescript": "^5.0.4"
   }
 }

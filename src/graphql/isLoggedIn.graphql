@@ -1,0 +1,12 @@
+ query isLoggedIn {
+  isLoggedIn{
+    isLogged{
+      is
+      username
+    }
+    error{
+      status
+      message
+    }
+  }
+}
