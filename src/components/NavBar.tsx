@@ -9,11 +9,11 @@ interface navbarProps {}
 const NavBar: React.FC = (props) => {
   const [{ fetching, data, stale: staleLoggedInUser, error }] =
     useIsLoggedInQuery();
-  // const [{ fetching: logoutFetching, stale, data: loginData }, logoutFunc] =
-  //   useLogoutMutation();
+  const [{ fetching: logoutFetching, stale, data: loginData }, logoutFunc] =
+    useLogoutMutation();
   const router = useRouter();
   const handleLogout = () => {
-    // logoutFunc({});
+    logoutFunc({});
   };
 
   // useEffect(() => {
