@@ -14,4 +14,4 @@ function Index() {
   );
 }
 
-export default withUrqlClient(createUrqlClient)(Index);
+export default Index;

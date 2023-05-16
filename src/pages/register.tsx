@@ -1,10 +1,11 @@
 import { useRegisterMutation } from "@/generated/generated";
-import InputField from "../components/InputField";
-import Wrapper from "../components/Wrapper";
-import { Box, Button, FormErrorMessage } from "@chakra-ui/react";
-import { Formik, Form } from "formik";
+import createUrqlClient from "@/util/urqlClient";
+import { Box, Button } from "@chakra-ui/react";
+import { Form, Formik } from "formik";
+import { withUrqlClient } from "next-urql";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
-import { Router, useRouter } from "next/router";
+import InputField from "../components/InputField";
 
 interface registerProps {}
 

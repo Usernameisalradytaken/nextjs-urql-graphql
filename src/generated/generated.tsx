@@ -29,6 +29,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   Login: UserResponse;
+  Logout: Scalars['Boolean'];
   Register: UserResponse;
   createPost: Post;
   deletePost: Scalars['Boolean'];
@@ -79,7 +80,6 @@ export type Post = {
 
 export type Query = {
   __typename?: 'Query';
-  Logout: Scalars['Boolean'];
   getPost?: Maybe<Post>;
   getPosts: Array<Post>;
   isLoggedIn: IsLoggedInResponse;
@@ -119,6 +119,7 @@ export type IsLoggedInResponse = {
 
 export type IsLoggedType = {
   __typename?: 'isLoggedType';
+  id?: Maybe<Scalars['Float']>;
   is: Scalars['Boolean'];
   username?: Maybe<Scalars['String']>;
 };
@@ -130,10 +131,10 @@ export type LoginMutationVariables = Exact<{
 
 export type LoginMutation = { __typename?: 'Mutation', Login: { __typename?: 'UserResponse', error?: { __typename?: 'ErrorReturn', status: number, message: string } | null, user?: { __typename?: 'User', id: number, email: string, username: string } | null } };
 
-export type LogoutQueryVariables = Exact<{ [key: string]: never; }>;
+export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type LogoutQuery = { __typename?: 'Query', Logout: boolean };
+export type LogoutMutation = { __typename?: 'Mutation', Logout: boolean };
 
 export type RegisterMutationVariables = Exact<{
   username: Scalars['String'];
@@ -149,7 +150,7 @@ export type RegularUserFragment = { __typename?: 'User', id: number, email: stri
 export type IsLoggedInQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IsLoggedInQuery = { __typename?: 'Query', isLoggedIn: { __typename?: 'isLoggedInResponse', isLogged?: { __typename?: 'isLoggedType', is: boolean, username?: string | null } | null, error?: { __typename?: 'ErrorReturn', status: number, message: string } | null } };
+export type IsLoggedInQuery = { __typename?: 'Query', isLoggedIn: { __typename?: 'isLoggedInResponse', isLogged?: { __typename?: 'isLoggedType', is: boolean, username?: string | null, id?: number | null } | null, error?: { __typename?: 'ErrorReturn', status: number, message: string } | null } };
 
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
@@ -176,13 +177,13 @@ export function useLoginMutation() {
   return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument);
 };
 export const LogoutDocument = gql`
-    query Logout {
+    mutation Logout {
   Logout
 }
     `;
 
-export function useLogoutQuery(options?: Omit<Urql.UseQueryArgs<LogoutQueryVariables>, 'query'>) {
-  return Urql.useQuery<LogoutQuery, LogoutQueryVariables>({ query: LogoutDocument, ...options });
+export function useLogoutMutation() {
+  return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(LogoutDocument);
 };
 export const RegisterDocument = gql`
     mutation Register($username: String!, $password: String!, $email: String!) {
@@ -209,6 +210,7 @@ export const IsLoggedInDocument = gql`
     isLogged {
       is
       username
+      id
     }
     error {
       status

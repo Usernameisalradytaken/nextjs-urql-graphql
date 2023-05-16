@@ -32,7 +32,7 @@ const Login: React.FC = (props) => {
             } else if (result.data?.Login.user) {
               console.log(result.data?.Login.user);
               setFormError("");
-              router.push("/")
+              router.replace("/")
             }
             actions.setSubmitting(false);
           })
@@ -84,4 +84,4 @@ const Login: React.FC = (props) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Login);
+export default Login;
