@@ -2,6 +2,8 @@ import Wrapper from "@/components/Wrapper";
 import {
   IsLoggedInDocument,
   IsLoggedInQuery,
+  IsLoggedInResponse,
+  LoginDocument,
   LoginMutation,
   LogoutMutation,
   RegisterMutation,
@@ -10,7 +12,13 @@ import "@/styles/globals.css";
 import { CSSReset, ChakraProvider, ColorModeProvider } from "@chakra-ui/react";
 import { Cache, QueryInput, cacheExchange } from "@urql/exchange-graphcache";
 import type { AppProps } from "next/app";
-import { Client, Provider, createClient, fetchExchange } from "urql";
+import {
+  Client,
+  Provider,
+  createClient,
+  fetchExchange,
+  mapExchange,
+} from "urql";
 import { devtoolsExchange } from "@urql/devtools";
 
 function betterUpdateQuery<Result, Query>(
@@ -26,18 +34,40 @@ const client = createClient({
   fetchOptions: {
     credentials: "include" as RequestCredentials,
   },
-
   exchanges: [
     devtoolsExchange,
+    mapExchange({
+      onError(error, operation) {
+        console.log(
+          "onError &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+          error,
+          operation
+        );
+      },
+      onOperation: (operation) => {
+        console.log(
+          "operation--------------------==-=-=-",
+          operation.query,
+          operation.key,
+          operation.kind,
+          operation
+        );
+      },
+      onResult: (result) => {
+        console.log(
+          "result--------------------==-=-=-",
+          result.data,
+          result.error,
+          result.operation,
+          result
+        );
+      },
+    }),
     cacheExchange({
-      // keys: {
-        // isLoggedType: () => Math.random().toString(),
-        // isLoggedInResponse: () => Math.random().toString(),
-      // },
       updates: {
         Mutation: {
           Logout: (_result, args, cache, info) => {
-            console.log("--------------" + cache);
+            console.log("################", _result, args, cache, info);
 
             betterUpdateQuery<LogoutMutation, IsLoggedInQuery>(
               cache,
@@ -53,7 +83,7 @@ const client = createClient({
             );
           },
           Register: (_result, args, cache, info) => {
-            console.log("--------------" + cache);
+            console.log("################", _result, args, cache, info);
 
             betterUpdateQuery<RegisterMutation, IsLoggedInQuery>(
               cache,
@@ -77,32 +107,26 @@ const client = createClient({
             );
           },
           Login: (_result, args, cache, info) => {
-            console.log("################", cache);
+            console.log("################", _result, args, cache, info);
+
             betterUpdateQuery<LoginMutation, IsLoggedInQuery>(
               cache,
               { query: IsLoggedInDocument },
               _result,
               (result, query) => {
-                console.log("################", cache);
-                // console.log("################", result, query);
-
-                if (result.Login.error) {
-                  return {
-                    isLoggedIn: {
-                      isLogged: null,
+                // if (result.Login.error) {
+                //   return query;
+                // } else {
+                return {
+                  isLoggedIn: {
+                    isLogged: {
+                      is: true,
+                      username: result.Login.user?.username,
+                      id: result.Login.user?.id,
                     },
-                  };
-                } else {
-                  return {
-                    isLoggedIn: {
-                      isLogged: {
-                        is: true,
-                        username: result.Login.user?.username,
-                        id: result.Login.user?.id,
-                      },
-                    },
-                  };
-                }
+                  },
+                  // };
+                };
               }
             );
           },

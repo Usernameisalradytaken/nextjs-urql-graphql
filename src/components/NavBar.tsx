@@ -16,10 +16,6 @@ const NavBar: React.FC = (props) => {
     logoutFunc({});
   };
 
-  // useEffect(() => {
-  //   isLoggedIn()
-  // },[])
-
   let navData;
   if (fetching) {
     navData = null;

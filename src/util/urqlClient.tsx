@@ -1,3 +1,10 @@
+
+
+
+//  DONT READ THIS FILE I AM WORKING ON THIS
+//  MAIN URQL CLIENT IS IN _app.tsx
+
+
 import {
   IsLoggedInDocument,
   IsLoggedInQuery,
@@ -30,9 +37,9 @@ const createUrqlClient = (ssrExchange: any) => ({
       //   isLoggedInResponse: () => Math.random().toString(),
       // },
       updates: {
-        Mutations: {
+        Mutation: {
           Logout: (_result, args, cache, info) => {
-            console.log("--------------" + cache);
+            console.log("################",_result,args, cache, info);
 
             betterUpdateQuery<LogoutMutation, IsLoggedInQuery>(
               cache,
@@ -71,17 +78,17 @@ const createUrqlClient = (ssrExchange: any) => ({
             );
           },
           Login: (_result, args, cache, info) => {
-            // console.log("--------------" + cache);
+            console.log("################",_result,args, cache, info);
             betterUpdateQuery<LoginMutation, IsLoggedInQuery>(
               cache,
               { query: IsLoggedInDocument },
               _result,
               (result, query) => {
-                console.log("################",result,query);
+              
                 
-                // if (result.Login.error) {
-                //   return query;
-                // } else {
+                if (result.Login.error) {
+                  return query;
+                } else {
                   return {
                     isLoggedIn: {
                       isLogged: {
@@ -89,7 +96,7 @@ const createUrqlClient = (ssrExchange: any) => ({
                         username: result.Login.user?.username,
                       },
                     },
-                  // };
+                  };
                 }
               }
             );
