@@ -1,0 +1,29 @@
+[33mcommit b8377b353b30f44c8200b65aeabe1456b58a8423[m[33m ([m[1;36mHEAD -> [m[1;32mmeQuery_code[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: usernameisAlreadyTaken <yashmurjani8@gmail.com>
+Date:   Tue May 16 19:13:42 2023 +0530
+
+    some changes in urql client
+
+[33mcommit dffc22537e56be01449ed7ecbea70538fc6162d9[m
+Author: usernameisAlreadyTaken <yashmurjani8@gmail.com>
+Date:   Tue May 16 13:14:45 2023 +0530
+
+    cache problem in urql
+
+[33mcommit 17daf4d077e175b086a719a9f803704e7e950d76[m
+Author: usernameisAlreadyTaken <yashmurjani8@gmail.com>
+Date:   Tue May 16 13:05:34 2023 +0530
+
+    cache problem in urql
+
+[33mcommit 513a242b3d1a4e6886c37e8e59e219d888c5bf56[m
+Author: usernameisAlreadyTaken <yashmurjani8@gmail.com>
+Date:   Sun May 14 15:11:31 2023 +0530
+
+    first commit
+
+[33mcommit 20fe68670d685d6e2941ed493bd1faca3c6042d9[m
+Author: usernameisAlreadyTaken <yashmurjani8@gmail.com>
+Date:   Sun May 7 21:05:26 2023 +0530
+
+    Initial commit from Create Next App

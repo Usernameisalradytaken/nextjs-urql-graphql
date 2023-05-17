@@ -3,7 +3,6 @@
     isLogged{
       is
       username
-      id
     }
     error{
       status

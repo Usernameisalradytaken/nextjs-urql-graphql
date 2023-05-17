@@ -6,6 +6,8 @@ import {
   LoginDocument,
   LoginMutation,
   LogoutMutation,
+  MeDocument,
+  MeQuery,
   RegisterMutation,
 } from "@/generated/generated";
 import "@/styles/globals.css";
@@ -68,16 +70,20 @@ const client = createClient({
         Mutation: {
           Logout: (_result, args, cache, info) => {
             console.log("################", _result, args, cache, info);
+            cache
+              .inspectFields("Query")
+              .filter((field) => field.fieldName === "isLoggedIn")
+              .forEach((field, i, fieldInfo) =>
+                console.log("FIFIFIFIFIFII", field, i, fieldInfo)
+              );
 
-            betterUpdateQuery<LogoutMutation, IsLoggedInQuery>(
+            betterUpdateQuery<LogoutMutation, MeQuery>(
               cache,
-              { query: IsLoggedInDocument },
+              { query: MeDocument },
               _result,
               () => {
                 return {
-                  isLoggedIn: {
-                    isLogged: null,
-                  },
+                  me : null
                 };
               }
             );
@@ -107,26 +113,35 @@ const client = createClient({
             );
           },
           Login: (_result, args, cache, info) => {
-            console.log("################", _result, args, cache, info);
-
-            betterUpdateQuery<LoginMutation, IsLoggedInQuery>(
+            console.log(
+              "##########INSIDE LOGINNNNN ######",
+              _result,
+              args,
               cache,
-              { query: IsLoggedInDocument },
+              info
+            );
+            // cache
+            // .inspectFields("Query")
+            // .filter((field) => field.fieldName === "isLoggedIn")
+            // .forEach((field,i,fieldInfo) => console.log("129e-h12j-je12ej-",field,i,fieldInfo));
+            // const a = cache.resolve({ __typename: "Login" }, "isLoggedIn");
+            // console.log(a);
+
+            betterUpdateQuery<LoginMutation, MeQuery>(
+              cache,
+              { query: MeDocument },
               _result,
               (result, query) => {
-                // if (result.Login.error) {
-                //   return query;
-                // } else {
-                return {
-                  isLoggedIn: {
-                    isLogged: {
-                      is: true,
-                      username: result.Login.user?.username,
+                if (result.Login.error && result.Login.user?.id) {
+                  return query;
+                } else {
+                  return {
+                    me: {
                       id: result.Login.user?.id,
+                      username: result.Login.user?.username,
                     },
-                  },
-                  // };
-                };
+                  };
+                }
               }
             );
           },

@@ -30,9 +30,9 @@ const Login: React.FC = (props) => {
             if (result.data?.Login.error) {
               setFormError(result.data?.Login.error);
             } else if (result.data?.Login.user) {
-              console.log(result.data?.Login.user);
+              // console.log(result.data?.Login.user);
               setFormError("");
-              router.replace("/")
+              router.push("/")
             }
             actions.setSubmitting(false);
           })

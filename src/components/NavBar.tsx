@@ -1,4 +1,4 @@
-import { useIsLoggedInQuery, useLogoutMutation } from "@/generated/generated";
+import { useIsLoggedInQuery, useLogoutMutation, useMeQuery } from "@/generated/generated";
 import { Box, Flex } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,7 +8,13 @@ interface navbarProps {}
 
 const NavBar: React.FC = (props) => {
   const [{ fetching, data, stale: staleLoggedInUser, error }] =
-    useIsLoggedInQuery();
+    useMeQuery();
+  console.log(
+    "¬¬¬¬¬¬¬¬¬¬¬¬¬FROM navbar¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬",
+    data,
+    fetching,
+    error
+  );
   const [{ fetching: logoutFetching, stale, data: loginData }, logoutFunc] =
     useLogoutMutation();
   const router = useRouter();
@@ -19,23 +25,7 @@ const NavBar: React.FC = (props) => {
   let navData;
   if (fetching) {
     navData = null;
-  } else if (
-    data?.isLoggedIn.isLogged?.is &&
-    data?.isLoggedIn.isLogged?.is == true
-  ) {
-    navData = (
-      <Flex justifyContent={"flex-end"}>
-        <Box>
-          <Link href={"/"}>{data.isLoggedIn.isLogged.username}</Link>
-        </Box>
-        <Box ml={2}>
-          <Link href={"/"} onClick={handleLogout}>
-            Log Out
-          </Link>
-        </Box>
-      </Flex>
-    );
-  } else {
+  } else if (!data?.me) {
     navData = (
       <Flex justifyContent={"flex-end"}>
         <Box>
@@ -46,9 +36,22 @@ const NavBar: React.FC = (props) => {
         </Box>
       </Flex>
     );
+  } else {
+    navData = (
+      <Flex justifyContent={"flex-end"}>
+        <Box>
+          <Link href={"/"}>{data.me.username}</Link>
+        </Box>
+        <Box ml={2}>
+          <Link href={"/"} onClick={handleLogout}>
+            Log Out
+          </Link>
+        </Box>
+      </Flex>
+    );
   }
 
-  console.log("---------------", navData, data, fetching);
+  // console.log("---------------", navData, data, fetching);
   return (
     // bgColor={"blackAlpha.400"}
     <Box padding={3} bgColor={"blackAlpha.300"}>

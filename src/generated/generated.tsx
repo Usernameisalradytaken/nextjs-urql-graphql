@@ -83,6 +83,7 @@ export type Query = {
   getPost?: Maybe<Post>;
   getPosts: Array<Post>;
   isLoggedIn: IsLoggedInResponse;
+  me?: Maybe<User>;
 };
 
 
@@ -136,6 +137,11 @@ export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
 
 export type LogoutMutation = { __typename?: 'Mutation', Logout: boolean };
 
+export type MeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, username: string } | null };
+
 export type RegisterMutationVariables = Exact<{
   username: Scalars['String'];
   password: Scalars['String'];
@@ -150,7 +156,7 @@ export type RegularUserFragment = { __typename?: 'User', id: number, email: stri
 export type IsLoggedInQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IsLoggedInQuery = { __typename?: 'Query', isLoggedIn: { __typename?: 'isLoggedInResponse', isLogged?: { __typename?: 'isLoggedType', is: boolean, username?: string | null, id?: number | null } | null, error?: { __typename?: 'ErrorReturn', status: number, message: string } | null } };
+export type IsLoggedInQuery = { __typename?: 'Query', isLoggedIn: { __typename?: 'isLoggedInResponse', isLogged?: { __typename?: 'isLoggedType', is: boolean, username?: string | null } | null, error?: { __typename?: 'ErrorReturn', status: number, message: string } | null } };
 
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
@@ -185,6 +191,18 @@ export const LogoutDocument = gql`
 export function useLogoutMutation() {
   return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(LogoutDocument);
 };
+export const MeDocument = gql`
+    query Me {
+  me {
+    id
+    username
+  }
+}
+    `;
+
+export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'>) {
+  return Urql.useQuery<MeQuery, MeQueryVariables>({ query: MeDocument, ...options });
+};
 export const RegisterDocument = gql`
     mutation Register($username: String!, $password: String!, $email: String!) {
   Register(input: {email: $email, username: $username, password: $password}) {
@@ -210,7 +228,6 @@ export const IsLoggedInDocument = gql`
     isLogged {
       is
       username
-      id
     }
     error {
       status
