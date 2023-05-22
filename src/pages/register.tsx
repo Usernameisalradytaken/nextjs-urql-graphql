@@ -26,81 +26,79 @@ interface registerProps {}
 const register: React.FC = (props) => {
   const [registerResult, register] = useRegisterMutation();
   const [formError, setFormError] = useState({} as any);
-  const router = useRouter()
+  const router = useRouter();
   return (
-    
-      <Formik
-        initialValues={{ username: "", password: "", email: "" }}
-        onSubmit={(values, actions) => {
-          setFormError("");
-          register({
-            username: values.username,
-            email: values.email,
-            password: values.password,
+    <Formik
+      initialValues={{ username: "", password: "", email: "" }}
+      onSubmit={(values, actions) => {
+        setFormError("");
+        register({
+          username: values.username,
+          email: values.email,
+          password: values.password,
+        })
+          .then((result) => {
+            if (result.data?.Register.error) {
+              setFormError(result.data?.Register.error);
+            } else if (result.data?.Register.user) {
+              setFormError("");
+              router.push("/");
+            }
+            actions.setSubmitting(false);
+            console.log(result);
           })
-            .then((result) => {
-              if (result.data?.Register.error) {
-                setFormError(result.data?.Register.error);
-              } else if (result.data?.Register.user) {
-                setFormError("");
-                router.push("/")
-              }
-              actions.setSubmitting(false);
-              console.log(result);
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        }}
-      >
-        {(props) => (
-          <Form>
+          .catch((err) => {
+            console.log(err);
+          });
+      }}
+    >
+      {(props) => (
+        <Form>
+          <InputField
+            type="text"
+            name="username"
+            placeholder="name"
+            label="Name"
+          />
+          <Box mt={4}>
             <InputField
-              type="text"
-              name="username"
-              placeholder="name"
-              label="Name"
+              type="email"
+              name="email"
+              placeholder="email"
+              label="Email"
             />
-            <Box mt={4}>
-              <InputField
-                type="email"
-                name="email"
-                placeholder="email"
-                label="Email"
-              />
-            </Box>
-            <Box mt={4}>
-              <InputField
-                type="password"
-                name="password"
-                placeholder="password"
-                label="Password"
-              />
-            </Box>
-            <Button
-              mt={4}
-              colorScheme="teal"
-              isLoading={props.isSubmitting}
-              type="submit"
+          </Box>
+          <Box mt={4}>
+            <InputField
+              type="password"
+              name="password"
+              placeholder="password"
+              label="Password"
+            />
+          </Box>
+          <Button
+            mt={4}
+            colorScheme="teal"
+            isLoading={props.isSubmitting}
+            type="submit"
+          >
+            Register
+          </Button>
+          {formError.status ? (
+            <Box
+              p={2}
+              bgColor={formError?.status == 200 ? "green.100" : "red.100"}
+              mt={2}
             >
-              Register
-            </Button>
-            {formError.status ? (
-              <Box
-                p={2}
-                bgColor={formError?.status == 200 ? "green.100" : "red.100"}
-                mt={2}
-              >
-                {formError?.message}
-              </Box>
-            ) : (
-              ""
-            )}
-          </Form>
-        )}
-      </Formik>
-
+              {formError?.message}
+            </Box>
+          ) : (
+            ""
+          )}
+        </Form>
+      )}
+    </Formik>
   );
 };
 
-export default register;
+export default withUrqlClient(createUrqlClient)(register);

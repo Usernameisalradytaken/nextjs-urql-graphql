@@ -1,8 +1,9 @@
-import { useIsLoggedInQuery, useLogoutMutation, useMeQuery } from "@/generated/generated";
+import { useLogoutMutation, useMeQuery } from "@/generated/generated";
+import { isServer } from "@/util/isServer";
 import { Box, Flex } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React from "react";
 
 interface navbarProps {}
 
@@ -15,9 +16,9 @@ const NavBar: React.FC = (props) => {
     fetching,
     error
   );
-  const [{ fetching: logoutFetching, stale, data: loginData }, logoutFunc] =
+  const [, logoutFunc] =
     useLogoutMutation();
-  const router = useRouter();
+  // const router = useRouter();
   const handleLogout = () => {
     logoutFunc({});
   };

@@ -1,7 +1,7 @@
 import { useLoginMutation } from "@/generated/generated";
 import InputField from "../components/InputField";
 
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Flex } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import React, { useState } from "react";
 import { useRouter } from "next/router";
@@ -32,7 +32,11 @@ const Login: React.FC = (props) => {
             } else if (result.data?.Login.user) {
               // console.log(result.data?.Login.user);
               setFormError("");
-              router.push("/")
+              if (typeof router.query.next === "string") {
+                router.push(router.query.next);
+              } else {
+                router.push("/");
+              }
             }
             actions.setSubmitting(false);
           })
@@ -59,6 +63,11 @@ const Login: React.FC = (props) => {
               label="Password"
             />
           </Box>
+          <Flex mt={4}>
+            <Box ml={"auto"} onClick={() => router.push("/forgetPassword")}>
+              <Button variant={"link"}>Forget Password ?</Button>
+            </Box>
+          </Flex>
           <Button
             mt={4}
             colorScheme="teal"
@@ -84,4 +93,4 @@ const Login: React.FC = (props) => {
   );
 };
 
-export default Login;
+export default withUrqlClient(createUrqlClient)(Login);

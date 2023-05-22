@@ -1,76 +1,197 @@
-
-
-
-//  DONT READ THIS FILE I AM WORKING ON THIS
-//  MAIN URQL CLIENT IS IN _app.tsx
-
-
 import {
   IsLoggedInDocument,
   IsLoggedInQuery,
   LoginMutation,
   LogoutMutation,
+  MeDocument,
+  MeQuery,
   RegisterMutation,
 } from "@/generated/generated";
-import { fetchExchange } from "@urql/core";
-import { Cache, QueryInput, cacheExchange } from "@urql/exchange-graphcache";
+import { devtoolsExchange } from "@urql/devtools";
+import { Resolver, cacheExchange } from "@urql/exchange-graphcache";
+import { fetchExchange, mapExchange, Exchange, stringifyVariables } from "urql";
+import { filter, pipe, tap } from "wonka";
+import { betterUpdateQuery } from "./betterUpdateQuery";
+import Router from "next/router";
 
-function betterUpdateQuery<Result, Query>(
-  cache: Cache,
-  qi: QueryInput,
-  result: any,
-  fun: (r: Result, q: Query) => Query
-) {
-  return cache.updateQuery(qi, (data) => fun(result, data as any) as any);
-}
+export const cursorPagination = (): Resolver<any, any, any> => {
+  return (_parent, fieldArgs, cache, info) => {
+    const { parentKey: entityKey, fieldName } = info;
+    console.log(entityKey, fieldName);
+
+    const allFields = cache.inspectFields(entityKey);
+    const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
+
+    console.log(fieldInfos);
+
+    const size = fieldInfos.length;
+    if (size === 0) {
+      return undefined;
+    }
+
+    console.log("fieldArgs", fieldArgs);
+    const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
+    console.log(fieldKey);
+    const inCache = cache.resolve(
+      cache.resolveFieldByKey(entityKey, fieldKey) as string,
+      "posts"
+    );
+    info.partial = !inCache;
+    console.log("inCache", inCache);
+
+    let hasMore;
+    const results: string[] = [];
+    fieldInfos.forEach((fi) => {
+      const key = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
+      console.log(key);
+      const data = cache.resolve(key, "posts");
+      hasMore = cache.resolve(key, "hasMore");
+      console.log(data, hasMore);
+      results.push(...(data as Array<string>));
+    });
+
+    return { __typename: "PaginatedPosts", hasMore, posts: results };
+
+    //   const visited = new Set();
+    //   let result: NullArray<string> = [];
+    //   let prevOffset: number | null = null;
+
+    //   for (let i = 0; i < size; i++) {
+    //     const { fieldKey, arguments: args } = fieldInfos[i];
+    //     if (args === null || !compareArgs(fieldArgs, args)) {
+    //       continue;
+    //     }
+
+    //     const links = cache.resolve(entityKey, fieldKey) as string[];
+    //     const currentOffset = args[cursorArgument];
+
+    //     if (
+    //       links === null ||
+    //       links.length === 0 ||
+    //       typeof currentOffset !== "number"
+    //     ) {
+    //       continue;
+    //     }
+
+    //     const tempResult: NullArray<string> = [];
+
+    //     for (let j = 0; j < links.length; j++) {
+    //       const link = links[j];
+    //       if (visited.has(link)) continue;
+    //       tempResult.push(link);
+    //       visited.add(link);
+    //     }
+
+    //     if (
+    //       (!prevOffset || currentOffset > prevOffset) ===
+    //       (mergeMode === "after")
+    //     ) {
+    //       result = [...result, ...tempResult];
+    //     } else {
+    //       result = [...tempResult, ...result];
+    //     }
+
+    //     prevOffset = currentOffset;
+    //   }
+
+    //   const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
+    //   if (hasCurrentPage) {
+    //     return result;
+    //   } else if (!(info as any).store.schema) {
+    //     return undefined;
+    //   } else {
+    //     info.partial = true;
+    //     return result;
+    //   }
+    // };
+  };
+};
+const errorExchange: Exchange =
+  ({ forward }) =>
+  (ops$) => {
+    return pipe(
+      forward(ops$),
+      tap(({ error }) => {
+        // console.log(error);
+
+        if (
+          typeof window !== "undefined" &&
+          error?.message.includes("Not Authenticated")
+        ) {
+          console.log(error.message);
+
+          Router.replace("/login?next=" + Router.pathname);
+        }
+      })
+    );
+  };
 
 const createUrqlClient = (ssrExchange: any) => ({
   url: "http://localhost:4000/graphql",
   fetchOptions: {
-    credentials: "include" as RequestCredentials,
+    credentials: "include" as const,
   },
 
   exchanges: [
+    devtoolsExchange,
     cacheExchange({
-      // keys: {
-      //   isLoggedType: () => Math.random().toString(),
-      //   isLoggedInResponse: () => Math.random().toString(),
-      // },
+      keys: {
+        PaginatedPosts: () => null,
+      },
+      resolvers: {
+        Query: {
+          getPosts: cursorPagination(),
+        },
+      },
       updates: {
         Mutation: {
-          Logout: (_result, args, cache, info) => {
-            console.log("################",_result,args, cache, info);
+          createPost: (_result, args, cache, info) => {
+            console.log("start");
+            console.log(cache.inspectFields("Query"));
 
-            betterUpdateQuery<LogoutMutation, IsLoggedInQuery>(
+            const allFields = cache.inspectFields("Query");
+            const fieldInfos = allFields.filter(
+              (info) => info.fieldName === "getPosts"
+            );
+
+            fieldInfos.map((fi) => {
+              cache.invalidate("Query", "getPosts", fi.arguments);
+            });
+
+            console.log();
+
+            console.log(cache.inspectFields("Query"));
+            console.log("end");
+          },
+          Logout: (_result, args, cache, info) => {
+            console.log("################", _result, args, cache, info);
+
+            betterUpdateQuery<LogoutMutation, MeQuery>(
               cache,
-              { query: IsLoggedInDocument },
+              { query: MeDocument },
               _result,
               () => {
                 return {
-                  isLoggedIn: {
-                    isLogged: null,
-                  },
+                  me: null,
                 };
               }
             );
           },
           Register: (_result, args, cache, info) => {
-            console.log("--------------" + cache);
+            console.log("################", _result, args, cache, info);
 
-            betterUpdateQuery<RegisterMutation, IsLoggedInQuery>(
+            betterUpdateQuery<RegisterMutation, MeQuery>(
               cache,
-              { query: IsLoggedInDocument },
+              { query: MeDocument },
               _result,
               (result, query) => {
                 if (result.Register.error) {
                   return query;
                 } else {
                   return {
-                    isLoggedIn: {
-                      isLogged: {
-                        is: true,
-                        username: result.Register.user?.username,
-                      },
+                    me: {
+                      id: result.Register.user?.id!,
+                      username: result.Register.user?.username!,
                     },
                   };
                 }
@@ -78,23 +199,26 @@ const createUrqlClient = (ssrExchange: any) => ({
             );
           },
           Login: (_result, args, cache, info) => {
-            console.log("################",_result,args, cache, info);
-            betterUpdateQuery<LoginMutation, IsLoggedInQuery>(
+            console.log(
+              "##########INSIDE LOGINNNNN ######",
+              _result,
+              args,
               cache,
-              { query: IsLoggedInDocument },
+              info
+            );
+            betterUpdateQuery<LoginMutation, MeQuery>(
+              cache,
+              { query: MeDocument },
               _result,
               (result, query) => {
-              
-                
-                if (result.Login.error) {
+                if (result.Login.error && result.Login.user?.id) {
                   return query;
                 } else {
                   return {
-                    isLoggedIn: {
-                      isLogged: {
-                        is: true,
-                        username: result.Login.user?.username,
-                      },
+                    me: {
+                      __typename: "User",
+                      id: result.Login.user?.id!,
+                      username: result.Login.user?.username!,
                     },
                   };
                 }
@@ -105,6 +229,7 @@ const createUrqlClient = (ssrExchange: any) => ({
       },
     }),
     ssrExchange,
+    errorExchange,
     fetchExchange,
   ],
 });
