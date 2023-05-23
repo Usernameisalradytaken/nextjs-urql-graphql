@@ -1,6 +1,8 @@
 import { useLogoutMutation, useMeQuery } from "@/generated/generated";
 import { isServer } from "@/util/isServer";
+import createUrqlClient from "@/util/urqlClient";
 import { Box, Flex } from "@chakra-ui/react";
+import { initUrqlClient, withUrqlClient } from "next-urql";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
@@ -8,17 +10,10 @@ import React from "react";
 interface navbarProps {}
 
 const NavBar: React.FC = (props) => {
-  const [{ fetching, data, stale: staleLoggedInUser, error }] =
-    useMeQuery();
-  console.log(
-    "¬¬¬¬¬¬¬¬¬¬¬¬¬FROM navbar¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬",
-    data,
-    fetching,
-    error
-  );
-  const [, logoutFunc] =
-    useLogoutMutation();
-  // const router = useRouter();
+  const [{ fetching, data }] = useMeQuery();
+  console.log("data-----------------from navbar",data);
+  
+  const [, logoutFunc] = useLogoutMutation();
   const handleLogout = () => {
     logoutFunc({});
   };
@@ -52,9 +47,7 @@ const NavBar: React.FC = (props) => {
     );
   }
 
-  // console.log("---------------", navData, data, fetching);
   return (
-    // bgColor={"blackAlpha.400"}
     <Box padding={3} bgColor={"blackAlpha.300"}>
       {navData}
     </Box>

@@ -21,13 +21,14 @@ function Index() {
     limit: 5,
     cursor: null as string | null,
   });
-  const [{operation}, vote] = useVoteMutation()
+  const [{ operation }, vote] = useVoteMutation();
   const [{ data, fetching }] = useGetPostsQuery({
     variables,
   });
 
-  console.log(operation);
-  
+  // console.log(operation);
+  console.log(data);
+
   if (!data && !fetching) {
     return <div>There is problem while getting the posts</div>;
   }
@@ -54,13 +55,18 @@ function Index() {
                 <Text mt={4}>{post.textSnippet}</Text>
                 <Flex align={"center"} mt={3}>
                   <IconButton
-                  onClick={async () =>{
-                  await vote({
-                    postId : post.id,
-                    value  : 1
-                  })
-                  }}
-                    variant={"unstyled"}
+                    colorScheme={post.voteStatus === 1 ? "orange" : ""}
+                    pointerEvents={post.voteStatus === 1 ? "none" : "auto"}
+                    onClick={async () => {
+                      if (post.voteStatus === 1) {
+                        return;
+                      }
+                      await vote({
+                        postId: post.id,
+                        value: 1,
+                      });
+                    }}
+                    variant={"ghost"}
                     // colorScheme='blue'
                     aria-label="Down vote"
                     mr={2}
@@ -69,13 +75,18 @@ function Index() {
                   {post.points}
 
                   <IconButton
-                    variant={"unstyled"}
-                    onClick={async() =>{
+                    variant={"ghost"}
+                    pointerEvents={post.voteStatus === -1 ? "none" : "auto"}
+                    colorScheme={post.voteStatus == -1 ? "orange" : ""}
+                    onClick={async () => {
+                      if (post.voteStatus === -1) {
+                        return;
+                      }
                       await vote({
-                        postId : post.id,
-                        value  : -1
-                      })
-                      }}
+                        postId: post.id,
+                        value: -1,
+                      });
+                    }}
                     // colorScheme='blue'
                     aria-label="Down vote"
                     ml={2}
@@ -110,4 +121,4 @@ function Index() {
   );
 }
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default withUrqlClient(createUrqlClient,{  ssr : true })(Index);

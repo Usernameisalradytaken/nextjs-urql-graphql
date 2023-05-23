@@ -107,6 +107,7 @@ export type Post = {
   textSnippet: Scalars['String'];
   title: Scalars['String'];
   updatedAt: Scalars['String'];
+  voteStatus?: Maybe<Scalars['Int']>;
 };
 
 export type PostInput = {
@@ -219,6 +220,8 @@ export type ChangePasswordByMailMutationVariables = Exact<{
 
 export type ChangePasswordByMailMutation = { __typename?: 'Mutation', changePasswordByMail: { __typename?: 'UserResponse', error?: { __typename?: 'ErrorReturn', status: number, message: string } | null, user?: { __typename?: 'User', username: string, email: string, id: number } | null } };
 
+export type PostSnippetFragment = { __typename?: 'Post', id: number, title: string, updatedAt: string, createdAt: string, textSnippet: string, points: number, voteStatus?: number | null, creator: { __typename?: 'User', username: string, email: string, gender?: string | null, id: number } };
+
 export type RegularUserFragment = { __typename?: 'User', id: number, email: string, username: string };
 
 export type GetPostsQueryVariables = Exact<{
@@ -227,7 +230,7 @@ export type GetPostsQueryVariables = Exact<{
 }>;
 
 
-export type GetPostsQuery = { __typename?: 'Query', getPosts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, updatedAt: string, createdAt: string, textSnippet: string, points: number, creator: { __typename?: 'User', username: string, email: string, gender?: string | null, id: number } }> } };
+export type GetPostsQuery = { __typename?: 'Query', getPosts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, updatedAt: string, createdAt: string, textSnippet: string, points: number, voteStatus?: number | null, creator: { __typename?: 'User', username: string, email: string, gender?: string | null, id: number } }> } };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -239,6 +242,24 @@ export type IsLoggedInQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type IsLoggedInQuery = { __typename?: 'Query', isLoggedIn: { __typename?: 'isLoggedInResponse', isLogged?: { __typename?: 'isLoggedType', is: boolean, username?: string | null } | null, error?: { __typename?: 'ErrorReturn', status: number, message: string } | null } };
 
+export const PostSnippetFragmentDoc = gql`
+    fragment PostSnippet on Post {
+  id
+  title
+  updatedAt
+  createdAt
+  title
+  textSnippet
+  points
+  voteStatus
+  creator {
+    username
+    email
+    gender
+    id
+  }
+}
+    `;
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
@@ -350,23 +371,11 @@ export const GetPostsDocument = gql`
   getPosts(limit: $limit, cursor: $cursor) {
     hasMore
     posts {
-      id
-      title
-      updatedAt
-      createdAt
-      title
-      textSnippet
-      points
-      creator {
-        username
-        email
-        gender
-        id
-      }
+      ...PostSnippet
     }
   }
 }
-    `;
+    ${PostSnippetFragmentDoc}`;
 
 export function useGetPostsQuery(options: Omit<Urql.UseQueryArgs<GetPostsQueryVariables>, 'query'>) {
   return Urql.useQuery<GetPostsQuery, GetPostsQueryVariables>({ query: GetPostsDocument, ...options });
