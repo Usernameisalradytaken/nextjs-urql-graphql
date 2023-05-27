@@ -1,4 +1,6 @@
 import {
+  DeletePostMutation,
+  DeletePostMutationVariables,
   IsLoggedInDocument,
   IsLoggedInQuery,
   LoginMutation,
@@ -10,7 +12,7 @@ import {
   RegisterMutation,
 } from "@/generated/generated";
 import { devtoolsExchange } from "@urql/devtools";
-import { Resolver, cacheExchange } from "@urql/exchange-graphcache";
+import { Resolver, cacheExchange , Cache } from "@urql/exchange-graphcache";
 import { fetchExchange, mapExchange, Exchange, stringifyVariables } from "urql";
 import { filter, pipe, tap } from "wonka";
 import { betterUpdateQuery } from "./betterUpdateQuery";
@@ -21,7 +23,7 @@ import { isServer } from "./isServer";
 export const cursorPagination = (): Resolver<any, any, any> => {
   return (_parent, fieldArgs, cache, info) => {
     const { parentKey: entityKey, fieldName } = info;
-    // console.log(entityKey, fieldName);
+    console.log(entityKey, fieldName);
 
     const allFields = cache.inspectFields(entityKey);
     const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
@@ -41,7 +43,7 @@ export const cursorPagination = (): Resolver<any, any, any> => {
       "posts"
     );
     info.partial = !inCache;
-    // console.log("inCache", inCache);
+    console.log("inCache", inCache);
 
     let hasMore;
     const results: string[] = [];
@@ -55,61 +57,21 @@ export const cursorPagination = (): Resolver<any, any, any> => {
     });
 
     return { __typename: "PaginatedPosts", hasMore, posts: results };
-
-    //   const visited = new Set();
-    //   let result: NullArray<string> = [];
-    //   let prevOffset: number | null = null;
-
-    //   for (let i = 0; i < size; i++) {
-    //     const { fieldKey, arguments: args } = fieldInfos[i];
-    //     if (args === null || !compareArgs(fieldArgs, args)) {
-    //       continue;
-    //     }
-
-    //     const links = cache.resolve(entityKey, fieldKey) as string[];
-    //     const currentOffset = args[cursorArgument];
-
-    //     if (
-    //       links === null ||
-    //       links.length === 0 ||
-    //       typeof currentOffset !== "number"
-    //     ) {
-    //       continue;
-    //     }
-
-    //     const tempResult: NullArray<string> = [];
-
-    //     for (let j = 0; j < links.length; j++) {
-    //       const link = links[j];
-    //       if (visited.has(link)) continue;
-    //       tempResult.push(link);
-    //       visited.add(link);
-    //     }
-
-    //     if (
-    //       (!prevOffset || currentOffset > prevOffset) ===
-    //       (mergeMode === "after")
-    //     ) {
-    //       result = [...result, ...tempResult];
-    //     } else {
-    //       result = [...tempResult, ...result];
-    //     }
-
-    //     prevOffset = currentOffset;
-    //   }
-
-    //   const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-    //   if (hasCurrentPage) {
-    //     return result;
-    //   } else if (!(info as any).store.schema) {
-    //     return undefined;
-    //   } else {
-    //     info.partial = true;
-    //     return result;
-    //   }
-    // };
   };
 };
+
+const invalidateCache = (cache: Cache) => {
+  const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "getPosts"
+              );
+
+              fieldInfos.map((fi) => {
+                cache.invalidate("Query", "getPosts", fi.arguments);
+              });
+}
+
+
 const errorExchange: Exchange =
   ({ forward }) =>
   (ops$) => {
@@ -132,9 +94,11 @@ const errorExchange: Exchange =
 
 const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie = "";
-  if (isServer()) {
+  // console.log(ctx);
+
+  if (isServer() && ctx) {
     // console.log("ctx", ctx.req.headers.cookie);
-    cookie = ctx.req.headers.cookie;
+    cookie = ctx.req?.headers.cookie;
     // console.log(ctx.ctx.req?.headers.cookie);
   }
 
@@ -162,6 +126,12 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
+            deletePost: (_result, args, cache, info) => {
+              console.log("___________START____________");
+
+              cache.invalidate(`Post:${args.id}`);
+              console.log("_________________END_______________");
+            },
             vote: (_result, args, cache, info) => {
               console.log(_result, args, cache, info);
               console.log("___________START____________");
@@ -216,20 +186,15 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
               // console.log("start");
               // console.log(cache.inspectFields("Query"));
 
-              const allFields = cache.inspectFields("Query");
-              const fieldInfos = allFields.filter(
-                (info) => info.fieldName === "getPosts"
-              );
-
-              fieldInfos.map((fi) => {
-                cache.invalidate("Query", "getPosts", fi.arguments);
-              });
+              invalidateCache(cache)
 
               // console.log(cache.inspectFields("Query"));
               // console.log("end");
             },
             Logout: (_result, args, cache, info) => {
               // console.log("################", _result, args, cache, info);
+
+              invalidateCache(cache);
 
               betterUpdateQuery<LogoutMutation, MeQuery>(
                 cache,
@@ -271,6 +236,7 @@ const createUrqlClient = (ssrExchange: any, ctx: any) => {
               //   cache,
               //   info
               // );
+              invalidateCache(cache);
 
               betterUpdateQuery<LoginMutation, MeQuery>(
                 cache,

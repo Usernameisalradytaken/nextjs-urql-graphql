@@ -63,7 +63,7 @@ export type MutationCreatePostArgs = {
 
 
 export type MutationDeletePostArgs = {
-  id: Scalars['Float'];
+  id: Scalars['Int'];
 };
 
 
@@ -80,7 +80,8 @@ export type MutationUpdatePasswordArgs = {
 
 
 export type MutationUpdatePostArgs = {
-  id: Scalars['Float'];
+  id: Scalars['Int'];
+  text: Scalars['String'];
   title: Scalars['String'];
 };
 
@@ -176,6 +177,13 @@ export type CreatePostMutationVariables = Exact<{
 
 export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Post', id: number, updatedAt: string, createdAt: string, title: string, textSnippet: string, creatorId: number, points: number } };
 
+export type DeletePostMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type DeletePostMutation = { __typename?: 'Mutation', deletePost: boolean };
+
 export type ForgetPasswordMutationVariables = Exact<{
   email: Scalars['String'];
 }>;
@@ -204,6 +212,15 @@ export type RegisterMutationVariables = Exact<{
 
 export type RegisterMutation = { __typename?: 'Mutation', Register: { __typename?: 'UserResponse', error?: { __typename?: 'ErrorReturn', status: number, message: string } | null, user?: { __typename?: 'User', id: number, email: string, username: string } | null } };
 
+export type UpdatePostMutationVariables = Exact<{
+  id: Scalars['Int'];
+  title: Scalars['String'];
+  text: Scalars['String'];
+}>;
+
+
+export type UpdatePostMutation = { __typename?: 'Mutation', updatePost?: { __typename?: 'Post', id: number, title: string, text: string, textSnippet: string } | null };
+
 export type VoteMutationVariables = Exact<{
   value: Scalars['Int'];
   postId: Scalars['Int'];
@@ -223,6 +240,13 @@ export type ChangePasswordByMailMutation = { __typename?: 'Mutation', changePass
 export type PostSnippetFragment = { __typename?: 'Post', id: number, title: string, updatedAt: string, createdAt: string, textSnippet: string, points: number, voteStatus?: number | null, creator: { __typename?: 'User', username: string, email: string, gender?: string | null, id: number } };
 
 export type RegularUserFragment = { __typename?: 'User', id: number, email: string, username: string };
+
+export type GetPostQueryVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type GetPostQuery = { __typename?: 'Query', getPost?: { __typename?: 'Post', textSnippet: string, id: number, updatedAt: string, createdAt: string, creatorId: number, title: string, text: string, points: number, voteStatus?: number | null, creator: { __typename?: 'User', username: string, email: string, gender?: string | null, id: number } } | null };
 
 export type GetPostsQueryVariables = Exact<{
   limit: Scalars['Int'];
@@ -284,6 +308,15 @@ export const CreatePostDocument = gql`
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
 };
+export const DeletePostDocument = gql`
+    mutation DeletePost($id: Int!) {
+  deletePost(id: $id)
+}
+    `;
+
+export function useDeletePostMutation() {
+  return Urql.useMutation<DeletePostMutation, DeletePostMutationVariables>(DeletePostDocument);
+};
 export const ForgetPasswordDocument = gql`
     mutation ForgetPassword($email: String!) {
   forgetPassword(email: $email)
@@ -338,6 +371,20 @@ export const RegisterDocument = gql`
 export function useRegisterMutation() {
   return Urql.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument);
 };
+export const UpdatePostDocument = gql`
+    mutation UpdatePost($id: Int!, $title: String!, $text: String!) {
+  updatePost(id: $id, title: $title, text: $text) {
+    id
+    title
+    text
+    textSnippet
+  }
+}
+    `;
+
+export function useUpdatePostMutation() {
+  return Urql.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument);
+};
 export const VoteDocument = gql`
     mutation vote($value: Int!, $postId: Int!) {
   vote(value: $value, postId: $postId)
@@ -365,6 +412,31 @@ export const ChangePasswordByMailDocument = gql`
 
 export function useChangePasswordByMailMutation() {
   return Urql.useMutation<ChangePasswordByMailMutation, ChangePasswordByMailMutationVariables>(ChangePasswordByMailDocument);
+};
+export const GetPostDocument = gql`
+    query GetPost($id: Int!) {
+  getPost(id: $id) {
+    textSnippet
+    id
+    updatedAt
+    createdAt
+    creatorId
+    title
+    text
+    points
+    voteStatus
+    creator {
+      username
+      email
+      gender
+      id
+    }
+  }
+}
+    `;
+
+export function useGetPostQuery(options: Omit<Urql.UseQueryArgs<GetPostQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetPostQuery, GetPostQueryVariables>({ query: GetPostDocument, ...options });
 };
 export const GetPostsDocument = gql`
     query GetPosts($limit: Int!, $cursor: String) {
